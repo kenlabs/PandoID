@@ -49,14 +49,6 @@ func (d *DID) String() string {
 		return ""
 	}
 
-	if d.ID != "" {
-		buf.WriteString(d.ID)
-	} else if len(d.IDStrings) > 0 {
-		buf.WriteString(strings.Join(d.IDStrings[:], ":"))
-	} else {
-		return ""
-	}
-
 	if len(d.Params) > 0 {
 		for _, p := range d.Params {
 			param := p.String()
