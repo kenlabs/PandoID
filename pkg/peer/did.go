@@ -37,13 +37,12 @@ func NewPeerDIDWithPeerID(peerID string) (didStr string, err error) {
 	return
 }
 
-func PeerDIDIsValid(peerDID string) (bool, error) {
-	pattern := `^did:peer:(([01](z)([1-9a-km-zA-HJ-NP-Z]{46,47}))|(2((\.[AEVID](z)([1-9a-km-zA-HJ-NP-Z]{46,47}))+(\.(S)[0-9a-zA-Z=]*)?)))$
-`
-	match, err := regexp.Match(pattern, []byte(peerDID))
+func DIDIsValid(peerDID string) (bool, error) {
+	pattern := fmt.Sprint(`did:peer:(0)(z)([1-9a-km-zA-HJ-NP-Z]{46})`)
+	reg, err := regexp.Compile(pattern)
 	if err != nil {
 		return false, err
 	}
 
-	return match, nil
+	return reg.MatchString(peerDID), nil
 }

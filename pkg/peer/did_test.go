@@ -2,6 +2,8 @@ package peer
 
 import (
 	"fmt"
+	"github.com/kenlabs/pando-id/pkg/did"
+	"github.com/kenlabs/pando-id/pkg/test"
 	"testing"
 )
 
@@ -15,5 +17,16 @@ func Test_NewPeerDID(t *testing.T) {
 			"didStr:%s\nprvKey:%s\n",
 			didStr, prvKey,
 		)
+		valid, err := DIDIsValid(didStr)
+		if err != nil {
+			t.Fail()
+		}
+		test.Assert(t, true, valid)
+
+		d, err := did.Parse(didStr)
+		if err != nil {
+			t.Fail()
+		}
+		test.Assert(t, "peer", d.Method)
 	})
 }
