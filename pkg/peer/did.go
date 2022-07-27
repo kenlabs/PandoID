@@ -1,58 +1,49 @@
 package peer
 
 import (
-	"encoding/base64"
+	"fmt"
 	"github.com/kenlabs/pando-id/pkg/did"
 	pandoPID "github.com/kenlabs/pando/pkg/system"
-	"github.com/libp2p/go-libp2p-core/crypto"
-	"time"
+	"github.com/multiformats/go-multibase"
+	"regexp"
 )
 
-const PeerDIDMethod = "peer"
+const (
+	numAlgo   = "0"
+	transform = multibase.Base58BTC
+	didMethod = "peer"
+)
 
-// did:peer:peerID
+func NewPeerDID() (didStr string, privateKey string, err error) {
+	var peerID string
 
-type PeerDID struct {
-	did.DID
-}
-
-type PeerDocument struct {
-	did.Document
-	// These properties should not be involved in DID doc
-	Created int64 `json:"created,omitempty"`
-	Updated int64 `json:"updated,omitempty"`
-}
-
-func NewPeerDID() (didStr string, peerID string, publicKey []byte, privateKey []byte, err error) {
-	peerID, privateKeyStr, err := pandoPID.CreateIdentity()
+	peerID, privateKey, err = pandoPID.CreateIdentity()
 	if err != nil {
 		return
 	}
 
-	privateKeyEncoded, err := base64.StdEncoding.DecodeString(privateKeyStr)
-	if err != nil {
-		return
-	}
-
-	privateKeyRaw, err := crypto.UnmarshalPrivateKey(privateKeyEncoded)
-	privateKey, err = privateKeyRaw.Raw()
-	if err != nil {
-		return
-	}
-	publicKeyRaw := privateKeyRaw.GetPublic()
-	publicKey, err = publicKeyRaw.Raw()
-	if err != nil {
-		return
-	}
-
-	peerDID := &PeerDID{}
-	peerDID.Method = PeerDIDMethod
-	peerDID.ID = peerID
-
-	peerDocument := &PeerDocument{}
-	peerDocument.Created = time.Now().UnixNano()
-	peerDocument.ID = peerDID.DID
-	peerDocument.Context = append(peerDocument.Context, did.DIDContextV1URI())
+	idStr := fmt.Sprint(numAlgo, string(transform), peerID)
+	peerDID := &did.DID{ID: idStr, Method: didMethod}
+	didStr = peerDID.String()
 
 	return
+}
+
+func NewPeerDIDWithPeerID(peerID string) (didStr string, err error) {
+	idStr := fmt.Sprint(numAlgo, string(transform), peerID)
+	peerDID := &did.DID{ID: idStr, Method: didMethod}
+	didStr = peerDID.String()
+
+	return
+}
+
+func PeerDIDIsValid(peerDID string) (bool, error) {
+	pattern := `^did:peer:(([01](z)([1-9a-km-zA-HJ-NP-Z]{46,47}))|(2((\.[AEVID](z)([1-9a-km-zA-HJ-NP-Z]{46,47}))+(\.(S)[0-9a-zA-Z=]*)?)))$
+`
+	match, err := regexp.Match(pattern, []byte(peerDID))
+	if err != nil {
+		return false, err
+	}
+
+	return match, nil
 }
